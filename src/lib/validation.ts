@@ -11,8 +11,9 @@ export const orderSchema = z.object({
     "game_development",
     "system_custom",
     "qa_tester_bugfix",
+    "other",
   ]),
-  tier: z.enum(["student", "business"]).default("student"), // <-- Tambahan tier
+  tier: z.enum(["student", "business"]).default("student"),
   features: z.array(z.string()).min(1),
   databaseRequired: z.boolean(),
   urgency: z.enum(["standard", "rush", "urgent"]),

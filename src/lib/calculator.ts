@@ -37,6 +37,13 @@ const BASE_RATES: Record<string, ServiceSpec> = {
     businessBaseMax: 2500000,
     baseDays: 3,
   },
+  other: {
+    studentBaseMin: 500000,
+    studentBaseMax: 1200000,
+    businessBaseMin: 1500000,
+    businessBaseMax: 4000000,
+    baseDays: 4,
+  },
 };
 
 export function calculateEstimate(
@@ -46,11 +53,10 @@ export function calculateEstimate(
   urgency: string,
   tier: ClientTier = "student",
 ) {
-  const spec = BASE_RATES[category] || BASE_RATES.web_development;
+  const spec = BASE_RATES[category] || BASE_RATES.other;
 
-  // Rate modular per fitur dan database disesuaikan dengan tier
-  const featureRate = tier === "student" ? 150000 : 450000;
-  const dbRate = tier === "student" ? 250000 : 800000;
+  const featureRate = tier === "student" ? 100000 : 350000;
+  const dbRate = tier === "student" ? 200000 : 700000;
 
   let min =
     (tier === "student" ? spec.studentBaseMin : spec.businessBaseMin) +
@@ -58,11 +64,11 @@ export function calculateEstimate(
   let max =
     (tier === "student" ? spec.studentBaseMax : spec.businessBaseMax) +
     featureCount * featureRate * 1.3;
-  let days = spec.baseDays + featureCount * 1.5;
+  let days = spec.baseDays + featureCount * 1.2;
 
   if (hasDb) {
     min += dbRate;
-    max += dbRate * 1.25;
+    max += dbRate * 1.2;
     days += 2;
   }
 
