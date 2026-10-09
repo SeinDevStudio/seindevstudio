@@ -46,8 +46,20 @@ export async function submitOrderAction(rawInput: unknown) {
       status: "lead",
     });
 
+    if (clientErr) {
+      console.error("Supabase Client Error:", clientErr);
+      return {
+        success: false,
+        error: `Gagal simpan data klien: ${clientErr.message}`,
+      };
+    }
+
     if (orderErr) {
       console.error("Supabase Order Error:", orderErr);
+      return {
+        success: false,
+        error: `Gagal simpan pesanan: ${orderErr.message}`,
+      };
     }
 
     // 3. Susun pesan WhatsApp

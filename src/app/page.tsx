@@ -1,30 +1,31 @@
 "use client";
 
-import { useState, useMemo, useTransition, useSyncExternalStore } from "react";
+import { useState, useMemo, useTransition } from "react";
+import { motion } from "framer-motion";
 import { calculateEstimate, type ClientTier } from "@/lib/calculator";
 import { submitOrderAction } from "@/app/actions/submitOrder";
 import HoneypotInput from "@/components/HoneypotInput";
 import {
   Terminal,
-  ShieldCheck,
-  ArrowRight,
-  Loader2,
-  Sun,
-  Moon,
   Code2,
   Gamepad2,
   Cpu,
   Bug,
   FolderKanban,
   Sparkles,
-  Layers,
   Database,
   Clock,
   CheckCircle2,
   ExternalLink,
   GraduationCap,
   Building2,
+  ArrowRight,
+  Loader2,
   MessageCircle,
+  ChevronRight,
+  ShieldCheck,
+  Menu,
+  X,
 } from "lucide-react";
 import type { OrderInput } from "@/lib/validation";
 
@@ -33,46 +34,63 @@ type UrgencyLevel = OrderInput["urgency"];
 
 interface CategoryConfig {
   id: ServiceCategory;
+  num: string;
   title: string;
   tagline: string;
   icon: typeof Code2;
+  gradient: string;
   techs: string[];
 }
 
 const CATEGORIES: CategoryConfig[] = [
   {
     id: "web_development",
+    num: "01",
     title: "Web & Enterprise App",
-    tagline: "Modern, high-performance web applications & dashboards.",
+    tagline:
+      "Modern, high-performance web applications, responsive SaaS & intuitive dashboards.",
     icon: Code2,
+    gradient: "from-amber-500/25 via-orange-500/15 to-transparent",
     techs: ["Next.js", "React", "TypeScript", "Tailwind", "PostgreSQL"],
   },
   {
     id: "game_development",
+    num: "02",
     title: "Game & Engine Logic",
-    tagline: "Mechanics, prototypes, educational games & narrative logic.",
+    tagline:
+      "Mechanics, prototypes, educational games, finite state machine & narrative logic.",
     icon: Gamepad2,
+    gradient: "from-rose-500/25 via-pink-500/15 to-transparent",
     techs: ["Unity", "C#", "State Machine", "Asset Integration", "2D/3D"],
   },
   {
     id: "system_custom",
-    title: "Custom Backend & Architecture",
-    tagline: "High-availability REST API, database design & microservices.",
+    num: "03",
+    title: "Custom Backend & Arch",
+    tagline:
+      "High-availability REST API, database schema optimization & microservice bridges.",
     icon: Cpu,
+    gradient: "from-indigo-500/25 via-purple-500/15 to-transparent",
     techs: ["Node.js", "Express", "Supabase", "Redis", "Docker"],
   },
   {
     id: "qa_tester_bugfix",
+    num: "04",
     title: "QA Testing & Bug Fix",
-    tagline: "Bug triage, automated testing, stress tests & security audits.",
+    tagline:
+      "Bug triage, functional test cases, load stress validation & vulnerability code audit.",
     icon: Bug,
+    gradient: "from-emerald-500/25 via-teal-500/15 to-transparent",
     techs: ["Jest/Playwright", "Security Triage", "Load Testing", "Code Audit"],
   },
   {
     id: "other",
+    num: "05",
     title: "Tugas Lain / Non-IT / Riset",
-    tagline: "Otomatisasi file, olah data Excel, asistensi tugas & konsultasi.",
+    tagline:
+      "Otomatisasi dokumen, olah data statistik, media interaktif & konsultasi tugas umum.",
     icon: FolderKanban,
+    gradient: "from-cyan-500/25 via-blue-500/15 to-transparent",
     techs: [
       "Data / Excel",
       "Script Automation",
@@ -91,33 +109,8 @@ const AVAILABLE_FEATURES = [
   { id: "security_audit", label: "Hardened Security & Rate Limiting" },
 ];
 
-function subscribeTheme(callback: () => void) {
-  window.addEventListener("storage", callback);
-  return () => window.removeEventListener("storage", callback);
-}
-
-function getThemeSnapshot(): "dark" | "light" {
-  const saved = localStorage.getItem("seindev_theme");
-  if (saved === "dark" || saved === "light") return saved;
-  return window.matchMedia("(prefers-color-scheme: light)").matches
-    ? "light"
-    : "dark";
-}
-
-function getThemeServerSnapshot(): "dark" | "light" {
-  return "dark";
-}
-
 export default function HomePage() {
-  const currentTheme = useSyncExternalStore(
-    subscribeTheme,
-    getThemeSnapshot,
-    getThemeServerSnapshot,
-  );
-
-  const [activeTheme, setActiveTheme] = useState<"dark" | "light" | null>(null);
-  const theme = activeTheme ?? currentTheme;
-
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [tier, setTier] = useState<ClientTier>("student");
   const [category, setCategory] = useState<ServiceCategory>("web_development");
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([
@@ -131,12 +124,6 @@ export default function HomePage() {
   const [honeypot, setHoneypot] = useState("");
   const [isPending, startTransition] = useTransition();
   const [formError, setFormError] = useState("");
-
-  const toggleTheme = () => {
-    const next = theme === "dark" ? "light" : "dark";
-    setActiveTheme(next);
-    localStorage.setItem("seindev_theme", next);
-  };
 
   const estimate = useMemo(() => {
     return calculateEstimate(
@@ -161,7 +148,7 @@ export default function HomePage() {
     setFormError("");
 
     if (category !== "other" && selectedFeatures.length === 0) {
-      setFormError("Pilih minimal 1 fitur atau modul.");
+      setFormError("Pilih minimal 1 modul fitur.");
       return;
     }
 
@@ -192,253 +179,380 @@ export default function HomePage() {
     });
   };
 
-  const isDark = theme === "dark";
-
   return (
-    <div
-      className={`min-h-screen transition-colors duration-300 font-sans ${
-        isDark
-          ? "bg-zinc-950 text-zinc-100 selection:bg-emerald-500/30"
-          : "bg-zinc-50 text-zinc-900 selection:bg-emerald-600/20"
-      }`}
-    >
-      <div
-        className={`fixed inset-0 pointer-events-none transition-opacity duration-500 ${
-          isDark
-            ? "opacity-[0.03] bg-[linear-gradient(to_right,#ffffff_1px,transparent_1px),linear-gradient(to_bottom,#ffffff_1px,transparent_1px)]"
-            : "opacity-[0.04] bg-[linear-gradient(to_right,#000000_1px,transparent_1px),linear-gradient(to_bottom,#000000_1px,transparent_1px)]"
-        } bg-size-[32px_32px]`}
-      />
+    <div className="min-h-screen bg-[#07090e] text-zinc-100 selection:bg-orange-500/30 selection:text-orange-200 overflow-x-hidden font-sans relative">
+      {/* Background Animated Aurora Mesh */}
+      <div className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-180 pointer-events-none overflow-hidden z-0">
+        <div className="absolute -top-30 left-[5%] w-145 h-130 bg-linear-to-br from-orange-600/30 via-rose-600/25 to-transparent blur-[130px] rounded-full animate-aurora-1" />
+        <div className="absolute -top-25 right-[5%] w-150 h-135 bg-linear-to-bl from-teal-500/30 via-indigo-600/25 to-transparent blur-[140px] rounded-full animate-aurora-2" />
+        <div className="absolute top-45 left-1/3 w-125 h-90 bg-purple-600/20 blur-[130px] rounded-full animate-aurora-3" />
+      </div>
 
-      {/* Navbar */}
-      <nav
-        className={`sticky top-0 z-40 backdrop-blur-md border-b transition-colors duration-300 ${
-          isDark
-            ? "border-zinc-800/80 bg-zinc-950/80"
-            : "border-zinc-200 bg-white/80"
-        }`}
-      >
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+      {/* Floating Header Navbar */}
+      <header className="sticky top-0 z-50 backdrop-blur-xl border-b border-white/6 bg-[#07090e]/85">
+        <div className="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between md:grid md:grid-cols-3">
+          {/* Kolom Kiri: Brand SeinDevStudio */}
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-md bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-500">
-              <Terminal size={18} />
-            </div>
-            <div>
-              <span className="font-mono font-bold tracking-tight text-base sm:text-lg">
-                SeinDev<span className="text-emerald-500">Studio</span>
+            <div className="flex items-center gap-2">
+              <span className="font-mono font-bold tracking-tight text-base text-white">
+                SeinDev<span className="text-orange-400">Studio</span>
               </span>
-              <span className="hidden sm:inline-block ml-2 text-[10px] font-mono px-1.5 py-0.5 rounded border border-emerald-500/30 text-emerald-500 bg-emerald-500/5">
-                v2.4 // ONLINE
+              <span className="hidden lg:inline-block text-[9px] font-mono px-1.5 py-0.5 rounded border border-white/10 text-zinc-400 bg-white/5">
+                v2.6
               </span>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="hidden sm:flex items-center gap-2 text-xs font-mono text-zinc-500">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Ready for New Projects</span>
-            </div>
+          {/* Kolom Tengah Desktop: Navigasi Presisi di Tengah */}
+          <nav className="hidden md:flex items-center justify-center gap-8 text-xs font-mono tracking-wider text-zinc-400 uppercase">
+            <a href="#tracks" className="hover:text-white transition-colors">
+              Tracks
+            </a>
+            <a href="#console" className="hover:text-white transition-colors">
+              Calculator
+            </a>
+            <a href="#stats" className="hover:text-white transition-colors">
+              Method
+            </a>
+            <a
+              href="/admin/login"
+              className="hover:text-white transition-colors flex items-center gap-1"
+            >
+              Portal <ExternalLink size={11} />
+            </a>
+          </nav>
 
+          {/* Kolom Kanan Desktop: Tombol Start Project */}
+          <div className="hidden md:flex justify-end">
+            <a
+              href="#console"
+              className="px-5 py-2.5 rounded-full bg-white text-zinc-950 text-xs font-semibold tracking-wide hover:bg-zinc-200 transition-all shadow-lg shadow-white/10 active:scale-95"
+            >
+              Start Project
+            </a>
+          </div>
+
+          {/* Tampilan Mobile: Tombol Burger Menu */}
+          <div className="flex md:hidden justify-end">
             <button
               type="button"
-              onClick={toggleTheme}
-              aria-label="Toggle Theme"
-              className={`p-2 rounded-lg border transition-all duration-200 cursor-pointer ${
-                isDark
-                  ? "border-zinc-800 bg-zinc-900 text-amber-400 hover:border-zinc-700"
-                  : "border-zinc-200 bg-zinc-100 text-zinc-700 hover:bg-zinc-200"
-              }`}
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-label="Toggle Mobile Menu"
+              className="p-2.5 rounded-xl border border-white/10 bg-white/3 text-zinc-300 hover:text-white hover:bg-white/8 transition cursor-pointer"
             >
-              {isDark ? <Sun size={17} /> : <Moon size={17} />}
+              {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
           </div>
         </div>
-      </nav>
 
-      <div className="relative max-w-6xl mx-auto px-6 py-12 sm:py-16 space-y-16">
-        {/* Header Hero */}
-        <header className="space-y-6 max-w-3xl">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono tracking-wide border border-emerald-500/30 bg-emerald-500/5 text-emerald-500">
-            <Sparkles size={13} />
-            <span>INDIE ENGINEERING // BESPOKE SOLUTIONS</span>
+        {/* Dropdown Menu Burger untuk Layar Mobile */}
+        {mobileMenuOpen && (
+          <div className="md:hidden border-b border-white/8 bg-[#07090e]/95 backdrop-blur-2xl px-6 py-6 space-y-4">
+            <nav className="flex flex-col gap-4 text-sm font-mono tracking-wider text-zinc-300 uppercase">
+              <a
+                href="#tracks"
+                onClick={() => setMobileMenuOpen(false)}
+                className="p-2 rounded-lg hover:bg-white/5 hover:text-white transition"
+              >
+                Tracks
+              </a>
+              <a
+                href="#console"
+                onClick={() => setMobileMenuOpen(false)}
+                className="p-2 rounded-lg hover:bg-white/5 hover:text-white transition"
+              >
+                Calculator
+              </a>
+              <a
+                href="#stats"
+                onClick={() => setMobileMenuOpen(false)}
+                className="p-2 rounded-lg hover:bg-white/5 hover:text-white transition"
+              >
+                Method
+              </a>
+              <a
+                href="/admin/login"
+                onClick={() => setMobileMenuOpen(false)}
+                className="p-2 rounded-lg hover:bg-white/5 text-orange-400 flex items-center gap-2 transition"
+              >
+                <span>Portal Admin</span>
+                <ExternalLink size={13} />
+              </a>
+            </nav>
           </div>
+        )}
+      </header>
 
-          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.15]">
-            Rekayasa Perangkat Lunak, Game, &amp; Solusi Tugas Berdaya Tinggi.
-          </h1>
-
-          <p
-            className={`text-base sm:text-lg leading-relaxed ${
-              isDark ? "text-zinc-400" : "text-zinc-600"
-            }`}
+      {/* Hero Section */}
+      <section className="relative z-10 pt-20 pb-24 text-center px-6 max-w-4xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[11px] font-mono tracking-widest uppercase border border-white/10 bg-white/4 text-orange-300 mb-8 backdrop-blur-xs"
+        >
+          <motion.div
+            animate={{ rotate: [0, 180, 360] }}
+            transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
           >
-            Membangun sistem web kustom, arsitektur backend, game interaktif,
-            hingga bantuan tugas/skripsi non-IT dengan biaya ramah mahasiswa.
-            Hitung estimasi ruang lingkup dan diskusikan langsung via WhatsApp.
+            <Sparkles size={13} className="text-orange-400" />
+          </motion.div>
+          <span>Bespoke Engineering &amp; Creative Code</span>
+        </motion.div>
+
+        <motion.h1
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.1 }}
+          className="text-5xl sm:text-7xl md:text-8xl font-black tracking-tight leading-[1.03] text-white"
+        >
+          SeinDev
+          <br />
+          <span className="bg-linear-to-r from-orange-200 via-white to-teal-200 bg-clip-text text-transparent">
+            Studio.
+          </span>
+        </motion.h1>
+
+        <motion.p
+          initial={{ opacity: 0, y: 25 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.25 }}
+          className="mt-8 text-base sm:text-xl text-zinc-400 max-w-2xl mx-auto leading-relaxed"
+        >
+          Studio rekayasa software kustom, logika game, arsitektur backend,
+          serta solusi pengerjaan tugas &amp; riset mahasiswa dengan kalkulasi
+          transparan.
+        </motion.p>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.4 }}
+          className="mt-10 flex flex-wrap items-center justify-center gap-4"
+        >
+          <motion.a
+            whileHover={{ scale: 1.04 }}
+            whileTap={{ scale: 0.96 }}
+            href="#console"
+            className="px-7 py-3.5 rounded-full bg-white text-zinc-950 font-bold text-sm tracking-wide hover:bg-zinc-200 transition-all shadow-xl shadow-white/10 flex items-center gap-2 cursor-pointer"
+          >
+            <span>Hitung Estimasi Proyek</span>
+            <ArrowRight size={15} />
+          </motion.a>
+          <motion.a
+            whileHover={{ scale: 1.04 }}
+            whileTap={{ scale: 0.96 }}
+            href="#tracks"
+            className="px-6 py-3.5 rounded-full border border-white/10 bg-white/2 text-zinc-300 font-medium text-sm hover:border-white/20 hover:text-white transition-all cursor-pointer"
+          >
+            Eksplor Layanan
+          </motion.a>
+        </motion.div>
+      </section>
+
+      {/* Metric Stats Banner */}
+      <section
+        id="stats"
+        className="relative z-10 border-y border-white/7 bg-white/1.5 py-8 backdrop-blur-xs"
+      >
+        <div className="max-w-6xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-8">
+          <div>
+            <div className="text-[11px] font-mono text-zinc-500 uppercase tracking-widest">
+              Pace // Waktu
+            </div>
+            <div className="text-xl sm:text-2xl font-bold font-mono text-white mt-1">
+              1 – 7 Hari
+            </div>
+          </div>
+          <div>
+            <div className="text-[11px] font-mono text-zinc-500 uppercase tracking-widest">
+              Layanan // Tracks
+            </div>
+            <div className="text-xl sm:text-2xl font-bold font-mono text-white mt-1">
+              5 Domain
+            </div>
+          </div>
+          <div>
+            <div className="text-[11px] font-mono text-zinc-500 uppercase tracking-widest">
+              Biaya Tugas Umum
+            </div>
+            <div className="text-xl sm:text-2xl font-bold font-mono text-orange-400 mt-1">
+              Mulai Rp 50k
+            </div>
+          </div>
+          <div>
+            <div className="text-[11px] font-mono text-zinc-500 uppercase tracking-widest">
+              Platform Status
+            </div>
+            <div className="text-xl sm:text-2xl font-bold font-mono text-teal-400 mt-1 flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-teal-400 animate-ping" />
+              Online
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* What's in it for you? (Track Cards) */}
+      <section
+        id="tracks"
+        className="relative z-10 py-24 max-w-6xl mx-auto px-6"
+      >
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.6 }}
+          className="text-center max-w-xl mx-auto mb-16 space-y-3"
+        >
+          <div className="w-1.5 h-1.5 mx-auto bg-orange-400 rotate-45 mb-4 animate-pulse" />
+          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white">
+            What&apos;s in it for you?
+          </h2>
+          <p className="text-sm text-zinc-400">
+            Pilih track spesialisasi yang sesuai dengan kebutuhan produk, sistem
+            bisnis, atau tugas akademik Anda.
           </p>
-        </header>
+        </motion.div>
 
-        {/* Section Tracks */}
-        <section className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xs font-mono uppercase tracking-widest text-zinc-400">
-              Core Capabilities
-            </h2>
-            <span className="text-xs font-mono text-emerald-500">
-              5 Tracks Available
-            </span>
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+          {CATEGORIES.map((cat) => {
+            const Icon = cat.icon;
+            const isSelected = category === cat.id;
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3.5">
-            {CATEGORIES.map((cat) => {
-              const Icon = cat.icon;
-              const isActive = category === cat.id;
-              return (
-                <div
-                  key={cat.id}
-                  onClick={() => setCategory(cat.id)}
-                  className={`relative p-4 rounded-xl border transition-all duration-200 cursor-pointer group flex flex-col justify-between ${
-                    isActive
-                      ? isDark
-                        ? "border-emerald-500 bg-emerald-950/20 shadow-lg shadow-emerald-950/20"
-                        : "border-emerald-600 bg-emerald-50/70 shadow-md shadow-emerald-500/5"
-                      : isDark
-                        ? "border-zinc-800/80 bg-zinc-900/50 hover:border-zinc-700 hover:bg-zinc-900"
-                        : "border-zinc-200 bg-white hover:border-zinc-300 hover:bg-zinc-50"
-                  }`}
-                >
-                  <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <div
-                        className={`p-2 rounded-lg border transition ${
-                          isActive
-                            ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-500"
-                            : isDark
-                              ? "border-zinc-800 bg-zinc-950 text-zinc-400 group-hover:text-zinc-200"
-                              : "border-zinc-200 bg-zinc-100 text-zinc-600 group-hover:text-zinc-900"
-                        }`}
-                      >
-                        <Icon size={18} />
-                      </div>
-                      {isActive && (
-                        <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                      )}
-                    </div>
-
-                    <h3 className="font-semibold text-xs sm:text-sm mb-1">
-                      {cat.title}
-                    </h3>
-                    <p
-                      className={`text-xs leading-relaxed mb-3 ${
-                        isDark ? "text-zinc-400" : "text-zinc-600"
-                      }`}
-                    >
-                      {cat.tagline}
-                    </p>
-                  </div>
-
-                  <div className="flex flex-wrap gap-1 pt-2 border-t border-zinc-800/40">
-                    {cat.techs.map((tech) => (
-                      <span
-                        key={tech}
-                        className={`text-[9px] font-mono px-1 py-0.5 rounded ${
-                          isDark
-                            ? "bg-zinc-950 border border-zinc-800 text-zinc-400"
-                            : "bg-zinc-100 border border-zinc-200 text-zinc-600"
-                        }`}
-                      >
-                        {tech}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-
-        {/* Console Kalkulator & Order Form */}
-        <section className="space-y-6 pt-4">
-          <div className="border-b pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-zinc-800/80">
-            <div>
-              <h2 className="text-xl sm:text-2xl font-bold tracking-tight">
-                Project Scope &amp; Estimation Console
-              </h2>
-              <p
-                className={`text-xs sm:text-sm mt-1 ${
-                  isDark ? "text-zinc-400" : "text-zinc-600"
+            return (
+              <motion.div
+                key={cat.id}
+                initial={{ opacity: 0, y: 35 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5 }}
+                whileHover={{ y: -8, scale: 1.02 }}
+                onClick={() => {
+                  setCategory(cat.id);
+                  const el = document.getElementById("console");
+                  if (el) el.scrollIntoView({ behavior: "smooth" });
+                }}
+                className={`relative rounded-2xl p-6 border transition-all duration-300 cursor-pointer flex flex-col justify-between overflow-hidden group ${
+                  isSelected
+                    ? "border-orange-500/80 bg-white/8 shadow-2xl shadow-orange-500/15"
+                    : "border-white/8 bg-white/2 hover:border-white/25 hover:bg-white/4"
                 }`}
               >
-                Pilih target layanan dan spesifikasi kebutuhan untuk estimasi
-                biaya transparan.
-              </p>
+                <div
+                  className={`absolute -top-20 -right-20 w-44 h-44 bg-linear-to-br ${cat.gradient} rounded-full blur-2xl pointer-events-none group-hover:scale-125 transition-transform duration-500 opacity-50`}
+                />
+
+                <div className="relative z-10">
+                  <div className="flex items-center justify-between mb-8">
+                    <div className="w-10 h-10 rounded-xl bg-white/6 border border-white/10 flex items-center justify-center text-zinc-300 group-hover:text-white transition group-hover:scale-110 duration-200">
+                      <Icon size={20} />
+                    </div>
+                    <span className="font-mono text-2xl font-bold text-zinc-600 group-hover:text-zinc-300 transition">
+                      {cat.num}
+                    </span>
+                  </div>
+
+                  <h3 className="text-base font-bold text-white mb-2 leading-snug">
+                    {cat.title}
+                  </h3>
+                  <p className="text-xs text-zinc-400 leading-relaxed line-clamp-3">
+                    {cat.tagline}
+                  </p>
+                </div>
+
+                <div className="relative z-10 pt-6 mt-6 border-t border-white/6 flex items-center justify-between">
+                  <span className="text-[10px] font-mono tracking-wider uppercase text-zinc-500 group-hover:text-orange-400 transition">
+                    {isSelected ? "Selected Track" : "Choose Track"}
+                  </span>
+                  <ChevronRight
+                    size={14}
+                    className="text-zinc-500 group-hover:translate-x-1 group-hover:text-white transition duration-200"
+                  />
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* Scope & Estimation Console */}
+      <section
+        id="console"
+        className="relative z-10 py-20 border-t border-white/7 bg-white/1"
+      >
+        <div className="max-w-6xl mx-auto px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 25 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4"
+          >
+            <div>
+              <div className="text-xs font-mono text-orange-400 uppercase tracking-widest mb-2">
+                Scope &amp; Estimation Console
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white">
+                Rancang Proyek &amp; Estimasi Biaya
+              </h2>
             </div>
-            <div className="flex items-center gap-2 font-mono text-xs text-emerald-500">
-              <Layers size={14} />
-              <span>LIVE_ENGINE // READY</span>
+            <div className="text-xs font-mono text-zinc-400">
+              Track Aktif:{" "}
+              <span className="text-white font-bold">
+                {CATEGORIES.find((c) => c.id === category)?.title}
+              </span>
             </div>
-          </div>
+          </motion.div>
 
           <form
             onSubmit={handleSubmit}
-            className="grid grid-cols-1 lg:grid-cols-12 gap-8"
+            className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start"
           >
             <HoneypotInput value={honeypot} onChange={setHoneypot} />
 
             <div className="lg:col-span-7 space-y-8">
-              {/* Pilihan Tier Klien */}
-              <div className="space-y-2">
-                <label className="text-xs font-mono uppercase tracking-wider text-zinc-400">
-                  Target Kategori Layanan
+              {/* Target Peserta / Klien */}
+              <div className="space-y-3">
+                <label className="text-xs font-mono text-zinc-400 uppercase tracking-wider">
+                  Target Peserta / Klien
                 </label>
-                <div
-                  className={`grid grid-cols-2 gap-2 p-1 rounded-xl border ${
-                    isDark
-                      ? "bg-zinc-900/90 border-zinc-800"
-                      : "bg-zinc-200/60 border-zinc-300"
-                  }`}
-                >
+                <div className="grid grid-cols-2 gap-3 p-1.5 rounded-2xl bg-white/3 border border-white/7">
                   <button
                     type="button"
                     onClick={() => setTier("student")}
-                    className={`py-3 px-4 rounded-lg text-xs sm:text-sm font-semibold transition cursor-pointer flex items-center justify-center gap-2 ${
+                    className={`py-3.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition cursor-pointer flex items-center justify-center gap-2 ${
                       tier === "student"
-                        ? "bg-emerald-500 text-zinc-950 shadow-md font-bold"
-                        : isDark
-                          ? "text-zinc-400 hover:text-zinc-200"
-                          : "text-zinc-600 hover:text-zinc-900"
+                        ? "bg-white text-zinc-950 font-bold shadow-lg"
+                        : "text-zinc-400 hover:text-white"
                     }`}
                   >
-                    <GraduationCap size={18} />
+                    <GraduationCap size={16} />
                     <span>Mahasiswa / Pelajar</span>
                   </button>
-
                   <button
                     type="button"
                     onClick={() => setTier("business")}
-                    className={`py-3 px-4 rounded-lg text-xs sm:text-sm font-semibold transition cursor-pointer flex items-center justify-center gap-2 ${
+                    className={`py-3.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition cursor-pointer flex items-center justify-center gap-2 ${
                       tier === "business"
-                        ? "bg-emerald-500 text-zinc-950 shadow-md font-bold"
-                        : isDark
-                          ? "text-zinc-400 hover:text-zinc-200"
-                          : "text-zinc-600 hover:text-zinc-900"
+                        ? "bg-white text-zinc-950 font-bold shadow-lg"
+                        : "text-zinc-400 hover:text-white"
                     }`}
                   >
-                    <Building2 size={18} />
-                    <span>Bisnis / Instansi / Startup</span>
+                    <Building2 size={16} />
+                    <span>Bisnis / Instansi</span>
                   </button>
                 </div>
               </div>
 
-              {/* Checklist Fitur / Modul (Hanya relevan jika IT murni, atau pilihan umum) */}
+              {/* Modul Spesifikasi */}
               {category !== "other" ? (
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <label className="text-xs font-mono uppercase tracking-wider text-zinc-400">
-                      1. Modul &amp; Fitur Sistem
+                    <label className="text-xs font-mono text-zinc-400 uppercase tracking-wider">
+                      Modul Fitur Diperlukan
                     </label>
                     <span className="text-xs font-mono text-zinc-500">
-                      {selectedFeatures.length} modul aktif
+                      {selectedFeatures.length} dipilih
                     </span>
                   </div>
 
@@ -449,24 +563,18 @@ export default function HomePage() {
                         <div
                           key={feat.id}
                           onClick={() => toggleFeature(feat.label)}
-                          className={`p-3.5 rounded-lg border text-xs sm:text-sm cursor-pointer transition flex items-center justify-between gap-3 select-none ${
+                          className={`p-3.5 rounded-xl border text-xs sm:text-sm cursor-pointer transition flex items-center justify-between gap-3 select-none ${
                             isChecked
-                              ? isDark
-                                ? "border-emerald-500/50 bg-emerald-950/20 text-emerald-300"
-                                : "border-emerald-600 bg-emerald-50 text-emerald-900 font-medium"
-                              : isDark
-                                ? "border-zinc-800/80 bg-zinc-900/40 text-zinc-400 hover:border-zinc-700 hover:text-zinc-300"
-                                : "border-zinc-200 bg-white text-zinc-600 hover:border-zinc-300 hover:text-zinc-900"
+                              ? "border-orange-500/60 bg-orange-500/8 text-white font-medium"
+                              : "border-white/6 bg-white/2 text-zinc-400 hover:border-white/15 hover:text-zinc-200"
                           }`}
                         >
                           <span>{feat.label}</span>
                           <div
-                            className={`w-4 h-4 rounded flex items-center justify-center border transition ${
+                            className={`w-4 h-4 rounded-md flex items-center justify-center border transition ${
                               isChecked
-                                ? "bg-emerald-500 border-emerald-500 text-zinc-950"
-                                : isDark
-                                  ? "border-zinc-700 bg-zinc-950"
-                                  : "border-zinc-300 bg-white"
+                                ? "bg-orange-500 border-orange-500 text-zinc-950"
+                                : "border-zinc-700 bg-zinc-900"
                             }`}
                           >
                             {isChecked && (
@@ -479,53 +587,37 @@ export default function HomePage() {
                   </div>
                 </div>
               ) : (
-                <div
-                  className={`p-4 rounded-xl border space-y-2 ${
-                    isDark
-                      ? "bg-zinc-900/40 border-zinc-800"
-                      : "bg-emerald-50/50 border-emerald-200"
-                  }`}
-                >
-                  <div className="flex items-center gap-2 text-emerald-500 font-medium text-xs font-mono">
+                <div className="p-5 rounded-2xl border border-cyan-500/30 bg-cyan-950/15 space-y-2">
+                  <div className="flex items-center gap-2 text-cyan-400 text-xs font-mono font-semibold">
                     <MessageCircle size={15} />
                     <span>KATEGORI TUGAS UMUM / NON-IT DIPILIH</span>
                   </div>
-                  <p
-                    className={`text-xs leading-relaxed ${
-                      isDark ? "text-zinc-400" : "text-zinc-600"
-                    }`}
-                  >
-                    Tidak perlu memilih fitur teknis di bawah. Anda bisa
-                    langsung menjelaskan instruksi tugas atau melampirkan file
-                    dokumen saat terhubung ke WhatsApp. Biaya sangat terjangkau
+                  <p className="text-xs text-zinc-300 leading-relaxed">
+                    Tidak memerlukan pemilihan modul sistem rumit. Silakan
+                    jelaskan detail tugas Anda di formulir catatan di bawah.
+                    Biaya pengerjaan fleksibel dan ramah kantong mahasiswa
                     (mulai Rp 50.000).
                   </p>
                 </div>
               )}
 
-              {/* Database & Deadline */}
+              {/* Database & Timeline Options */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="flex items-center gap-1.5 text-xs font-mono uppercase tracking-wider text-zinc-400">
                     <Database size={13} />
-                    <span>Database &amp; Storage</span>
+                    <span>Database &amp; Data Storage</span>
                   </label>
                   <select
                     disabled={category === "other"}
                     value={hasDb ? "yes" : "no"}
                     onChange={(e) => setHasDb(e.target.value === "yes")}
-                    className={`w-full rounded-lg p-3 text-sm border outline-none transition font-sans disabled:opacity-50 ${
-                      isDark
-                        ? "bg-zinc-900 border-zinc-800 focus:border-emerald-500 text-zinc-200"
-                        : "bg-white border-zinc-200 focus:border-emerald-600 text-zinc-900"
-                    }`}
+                    className="w-full rounded-xl p-3.5 text-xs sm:text-sm border border-white/8 bg-zinc-900 text-zinc-200 outline-none focus:border-orange-500 transition disabled:opacity-40"
                   >
                     <option value="yes">
-                      Relational DB (Supabase / Postgres)
+                      Database Relasional (Supabase / Postgres)
                     </option>
-                    <option value="no">
-                      Statik / Tanpa Database Persisten
-                    </option>
+                    <option value="no">Tanpa Database Eksternal</option>
                   </select>
                 </div>
 
@@ -537,245 +629,197 @@ export default function HomePage() {
                   <select
                     value={urgency}
                     onChange={(e) => setUrgency(e.target.value as UrgencyLevel)}
-                    className={`w-full rounded-lg p-3 text-sm border outline-none transition font-sans ${
-                      isDark
-                        ? "bg-zinc-900 border-zinc-800 focus:border-emerald-500 text-zinc-200"
-                        : "bg-white border-zinc-200 focus:border-emerald-600 text-zinc-900"
-                    }`}
+                    className="w-full rounded-xl p-3.5 text-xs sm:text-sm border border-white/8 bg-zinc-900 text-zinc-200 outline-none focus:border-orange-500 transition"
                   >
-                    <option value="standard">
-                      Jadwal Standar (Normal Pace)
-                    </option>
-                    <option value="rush">Rush Order (Prioritas Tinggi)</option>
+                    <option value="standard">Jadwal Normal (Santai)</option>
+                    <option value="rush">Prioritas Cepat (Rush)</option>
                     <option value="urgent">
-                      Urgent / Critical (&lt; 3-7 Hari)
+                      Sangat Mendesak (&lt; 3-5 Hari)
                     </option>
                   </select>
                 </div>
               </div>
 
-              {/* Kontak Pemesan */}
-              <div
-                className={`space-y-4 pt-6 border-t ${
-                  isDark ? "border-zinc-800/80" : "border-zinc-200"
-                }`}
-              >
-                <label className="text-xs font-mono uppercase tracking-wider text-zinc-400">
-                  2. Informasi Kontak &amp; Deskripsi Tugas
+              {/* Data Klien */}
+              <div className="space-y-4 pt-4 border-t border-white/6">
+                <label className="text-xs font-mono text-zinc-400 uppercase tracking-wider">
+                  Informasi Pemesan &amp; Catatan
                 </label>
-
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <input
-                      type="text"
-                      placeholder="Nama Lengkap / Panggilan"
-                      required
-                      value={clientName}
-                      onChange={(e) => setClientName(e.target.value)}
-                      className={`w-full rounded-lg p-3 text-sm border outline-none transition ${
-                        isDark
-                          ? "bg-zinc-900 border-zinc-800 focus:border-emerald-500 placeholder:text-zinc-600 text-zinc-100"
-                          : "bg-white border-zinc-200 focus:border-emerald-600 placeholder:text-zinc-400 text-zinc-900"
-                      }`}
-                    />
-                  </div>
-                  <div>
-                    <input
-                      type="text"
-                      placeholder="Nomor WA (contoh: 08123456789)"
-                      required
-                      value={clientWhatsapp}
-                      onChange={(e) => setClientWhatsapp(e.target.value)}
-                      className={`w-full rounded-lg p-3 text-sm border outline-none transition font-mono ${
-                        isDark
-                          ? "bg-zinc-900 border-zinc-800 focus:border-emerald-500 placeholder:text-zinc-600 text-zinc-100"
-                          : "bg-white border-zinc-200 focus:border-emerald-600 placeholder:text-zinc-400 text-zinc-900"
-                      }`}
-                    />
-                  </div>
+                  <input
+                    type="text"
+                    placeholder="Nama Lengkap / Panggilan"
+                    required
+                    value={clientName}
+                    onChange={(e) => setClientName(e.target.value)}
+                    className="w-full rounded-xl p-3.5 text-xs sm:text-sm border border-white/8 bg-white/3 text-zinc-100 placeholder:text-zinc-600 outline-none focus:border-orange-500 transition"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Nomor WhatsApp (misal: 08123456789)"
+                    required
+                    value={clientWhatsapp}
+                    onChange={(e) => setClientWhatsapp(e.target.value)}
+                    className="w-full rounded-xl p-3.5 text-xs sm:text-sm border border-white/8 bg-white/3 text-zinc-100 placeholder:text-zinc-600 outline-none focus:border-orange-500 font-mono transition"
+                  />
                 </div>
-
                 <textarea
                   placeholder={
                     category === "other"
-                      ? "Tuliskan jenis tugas yang perlu dibantu (misal: olah data Excel, pembuatan materi/slide, perbaikan format file, script simpel, dll)..."
-                      : "Ceritakan kebutuhan proyek, alur sistem, atau referensi aplikasi yang diinginkan..."
+                      ? "Tuliskan deskripsi tugas yang ingin dibantu (misal: olah data spreadsheet, format dokumen skripsi, visualisasi materi, dll)..."
+                      : "Ceritakan deskripsi proyek, referensi aplikasi, atau batasan sistem yang diinginkan..."
                   }
                   rows={4}
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  className={`w-full rounded-lg p-3 text-sm border outline-none transition ${
-                    isDark
-                      ? "bg-zinc-900 border-zinc-800 focus:border-emerald-500 placeholder:text-zinc-600 text-zinc-100"
-                      : "bg-white border-zinc-200 focus:border-emerald-600 placeholder:text-zinc-400 text-zinc-900"
-                  }`}
+                  className="w-full rounded-xl p-3.5 text-xs sm:text-sm border border-white/8 bg-white/3 text-zinc-100 placeholder:text-zinc-600 outline-none focus:border-orange-500 transition"
                 />
               </div>
             </div>
 
-            {/* Kotak Estimasi Live */}
+            {/* Kotak Sticky Estimasi */}
             <div className="lg:col-span-5">
-              <div
-                className={`sticky top-24 rounded-2xl p-6 sm:p-7 border space-y-6 shadow-xl transition-colors duration-300 ${
-                  isDark
-                    ? "bg-zinc-900/80 border-zinc-800/90 shadow-black/40"
-                    : "bg-white border-zinc-200 shadow-zinc-200/50"
-                }`}
-              >
-                <div className="flex items-center justify-between pb-4 border-b border-zinc-800/40">
-                  <div className="flex items-center gap-2 text-xs font-mono">
-                    <ShieldCheck size={16} className="text-emerald-500" />
-                    <span className="font-semibold tracking-wide">
-                      ESTIMASI REAL-TIME
-                    </span>
+              <div className="sticky top-28 rounded-3xl p-7 border border-white/10 bg-white/3 backdrop-blur-2xl space-y-6 shadow-2xl shadow-black/80">
+                <div className="flex items-center justify-between pb-4 border-b border-white/7">
+                  <div className="flex items-center gap-2 text-xs font-mono text-zinc-300">
+                    <ShieldCheck size={16} className="text-orange-400" />
+                    <span>LIVE ESTIMATION</span>
                   </div>
-                  <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                  <span className="text-[10px] font-mono uppercase px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-orange-300">
                     {category === "other"
-                      ? "HARGA FLEKSIBEL"
+                      ? "Nego Santai"
                       : tier === "student"
-                        ? "TARIF AKADEMIK"
-                        : "TARIF BISNIS"}
+                        ? "Harga Pelajar"
+                        : "Bisnis"}
                   </span>
                 </div>
 
-                {/* Tampilan Harga Fleksibel jika Kategori Other */}
                 <div className="space-y-1.5">
-                  <span className="text-xs font-mono uppercase text-zinc-400">
+                  <span className="text-xs font-mono uppercase text-zinc-500 tracking-wider">
                     Perkiraan Biaya
                   </span>
                   {category === "other" ? (
-                    <div className="space-y-1">
-                      <div className="text-2xl sm:text-3xl font-extrabold font-mono text-emerald-400 tracking-tight">
+                    <div>
+                      <div className="text-3xl font-extrabold font-mono text-white tracking-tight">
                         Nego via WhatsApp
                       </div>
-                      <div className="text-xs font-mono text-zinc-400">
-                        Mulai Rp 50.000 (menyesuaikan tingkat kesulitan tugas)
+                      <div className="text-xs font-mono text-orange-400 mt-1">
+                        Mulai Rp 50.000 (menyesuaikan tingkat kesulitan)
                       </div>
                     </div>
                   ) : (
-                    <div className="space-y-1">
-                      <div className="text-2xl sm:text-3xl font-extrabold font-mono text-emerald-500 tracking-tight">
+                    <div>
+                      <div className="text-3xl sm:text-4xl font-extrabold font-mono text-white tracking-tight">
                         Rp {estimate.priceMin.toLocaleString("id-ID")}
                       </div>
-                      <div className="text-xs font-mono text-zinc-400">
+                      <div className="text-xs font-mono text-zinc-400 mt-1">
                         hingga Rp {estimate.priceMax.toLocaleString("id-ID")}
                       </div>
                     </div>
                   )}
                 </div>
 
-                <div
-                  className={`p-4 rounded-xl border flex items-center justify-between ${
-                    isDark
-                      ? "bg-zinc-950/60 border-zinc-800/80"
-                      : "bg-zinc-50 border-zinc-200"
-                  }`}
-                >
+                <div className="p-4 rounded-2xl bg-white/2 border border-white/6 flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
-                    <Clock size={16} className="text-emerald-500" />
+                    <Clock size={16} className="text-orange-400" />
                     <span className="text-xs text-zinc-400">
                       Estimasi Durasi
                     </span>
                   </div>
-                  <span className="font-mono font-bold text-sm">
+                  <span className="font-mono font-bold text-sm text-white">
                     {category === "other"
                       ? "1 – 3 Hari (Fleksibel)"
                       : `± ${estimate.days} Hari Kerja`}
                   </span>
                 </div>
 
-                <div className="space-y-2 text-xs text-zinc-400 border-t border-zinc-800/40 pt-4">
+                <div className="space-y-2.5 text-xs text-zinc-400 pt-2 border-t border-white/6">
+                  <div className="flex justify-between">
+                    <span>Track:</span>
+                    <span className="text-white font-medium">
+                      {CATEGORIES.find((c) => c.id === category)?.title}
+                    </span>
+                  </div>
                   <div className="flex justify-between">
                     <span>Target:</span>
-                    <span className="font-mono text-emerald-400 font-semibold">
+                    <span className="text-orange-300 font-medium">
                       {tier === "student"
                         ? "Mahasiswa / Pelajar"
                         : "Bisnis / Instansi"}
                     </span>
                   </div>
-                  <div className="flex justify-between">
-                    <span>Kategori:</span>
-                    <span className="font-mono text-zinc-300 font-semibold">
-                      {CATEGORIES.find((c) => c.id === category)?.title}
-                    </span>
-                  </div>
                   {category !== "other" && (
-                    <>
-                      <div className="flex justify-between">
-                        <span>Modul:</span>
-                        <span className="font-mono text-zinc-300">
-                          {selectedFeatures.length} Item
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Database:</span>
-                        <span className="font-mono text-zinc-300">
-                          {hasDb ? "Integrated" : "None"}
-                        </span>
-                      </div>
-                    </>
+                    <div className="flex justify-between">
+                      <span>Modul:</span>
+                      <span className="text-white font-mono">
+                        {selectedFeatures.length} Item
+                      </span>
+                    </div>
                   )}
                   <div className="flex justify-between">
-                    <span>Prioritas:</span>
-                    <span className="font-mono uppercase text-emerald-500">
+                    <span>Kecepatan:</span>
+                    <span className="font-mono uppercase text-white">
                       {urgency}
                     </span>
                   </div>
                 </div>
 
                 {formError && (
-                  <div className="p-3 bg-red-950/40 border border-red-800/50 rounded-lg text-red-400 text-xs">
+                  <div className="p-3.5 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-300 text-xs">
                     {formError}
                   </div>
                 )}
 
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   type="submit"
                   disabled={isPending}
-                  className="w-full py-3.5 px-4 bg-emerald-500 hover:bg-emerald-400 active:scale-[0.99] disabled:bg-zinc-800 disabled:text-zinc-600 text-zinc-950 font-bold rounded-xl flex items-center justify-center gap-2 transition-all duration-150 text-sm cursor-pointer shadow-lg shadow-emerald-500/10"
+                  className="w-full py-4 px-6 bg-white hover:bg-zinc-200 disabled:bg-zinc-800 disabled:text-zinc-600 text-zinc-950 font-bold rounded-2xl flex items-center justify-center gap-2 transition text-sm cursor-pointer shadow-xl shadow-white/5"
                 >
                   {isPending ? (
                     <>
-                      <Loader2 size={16} className="animate-spin" />
-                      <span>Menghubungkan ke WhatsApp...</span>
+                      <Loader2 size={17} className="animate-spin" />
+                      <span>Menyiapkan Tiket WhatsApp...</span>
                     </>
                   ) : (
                     <>
-                      <span>Pesan via WhatsApp</span>
-                      <ArrowRight size={16} />
+                      <span>Diskusi via WhatsApp</span>
+                      <ArrowRight size={17} />
                     </>
                   )}
-                </button>
+                </motion.button>
 
                 <p className="text-[11px] text-center text-zinc-500 leading-relaxed">
-                  Rincian tugas akan otomatis terformat rapi dan langsung
-                  dikirimkan ke kontak WhatsApp SeinDevStudio.
+                  Rincian spesifikasi akan terformat otomatis dan langsung
+                  diteruskan ke WhatsApp SeinDevStudio.
                 </p>
               </div>
             </div>
           </form>
-        </section>
+        </div>
+      </section>
 
-        {/* Footer */}
-        <footer
-          className={`pt-12 pb-8 border-t flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono ${
-            isDark
-              ? "border-zinc-800 text-zinc-500"
-              : "border-zinc-200 text-zinc-500"
-          }`}
-        >
-          <div>&copy; 2026 SeinDevStudio. Engineered with precision.</div>
-          <div className="flex items-center gap-4">
+      {/* Footer */}
+      <footer className="relative z-10 py-12 border-t border-white/7 bg-[#05070a]">
+        <div className="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-6 text-xs font-mono text-zinc-500">
+          <div>&copy; 2026 SeinDevStudio. All rights reserved.</div>
+          <div className="flex items-center gap-6">
+            <a href="#tracks" className="hover:text-zinc-300 transition">
+              Tracks
+            </a>
+            <a href="#console" className="hover:text-zinc-300 transition">
+              Console
+            </a>
             <a
               href="/admin/login"
-              className="hover:text-emerald-500 transition flex items-center gap-1"
+              className="hover:text-orange-400 transition flex items-center gap-1"
             >
-              <span>Owner Portal</span>
-              <ExternalLink size={12} />
+              Portal Admin <ExternalLink size={12} />
             </a>
           </div>
-        </footer>
-      </div>
+        </div>
+      </footer>
     </div>
   );
 }
