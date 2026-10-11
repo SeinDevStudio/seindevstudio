@@ -7,7 +7,7 @@
 Building immersive gameplay systems, interactive learning experiences, and modern web applications.
 
 [![GitHub](https://img.shields.io/badge/GitHub-SeinDevStudio-181717?style=flat-square&logo=github)](https://github.com/SeinDevStudio)
-[![Portfolio](https://img.shields.io/badge/Portfolio-Portofolio--SeinDevStudio-blue?style=flat-square&logo=react)](https://github.com/SeinDevStudio/Portofolio-SeinDevStudio)
+[![Portfolio](https://img.shields.io/badge/Portfolio-Portofolio--SeinDevStudio-blue?style=flat-square&logo=react)](https://github.com/SeinDevStudio/portofolio-sein)
 [![Email](https://img.shields.io/badge/Email-seindevstudio%40gmail.com-EA4335?style=flat-square&logo=gmail&logoColor=white)](mailto:seindevstudio@gmail.com)
 
 </div>
